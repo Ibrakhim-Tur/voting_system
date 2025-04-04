@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Онлайн-голосование</title>
+</head>
+<body>
+    <h1>Активные голосования</h1>
+    <ul>
+        {% for election in elections %}
+        <li>{{ election.title }} (до {{ election.end_date|date:"d.m.Y" }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

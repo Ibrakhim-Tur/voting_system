@@ -10,4 +10,3 @@ class ElectionAdmin(admin.ModelAdmin):
 class CandidateAdmin(admin.ModelAdmin):
     list_display = ('name', 'election', 'votes')
 
-admin.site.register(Vote)

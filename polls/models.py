@@ -27,4 +27,16 @@ class Vote(models.Model):
     voted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [('user', 'election')]  # 1 голос от пользователя
+        unique_together = [('user', 'election')]
+
+
+class Vote(models.Model):
+    # ... существующие поля ...
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'election'],
+                name='unique_vote'
+            )
+        ]

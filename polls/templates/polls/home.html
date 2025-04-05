@@ -1,14 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Онлайн-голосование</title>
-</head>
-<body>
-    <h1>Активные голосования</h1>
-    <ul>
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-4 mb-4 text-center">Активные голосования</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 g-4">
         {% for election in elections %}
-        <li>{{ election.title }} (до {{ election.end_date|date:"d.m.Y" }})</li>
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ election.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ election.description|default:"Описание отсутствует" }}</p>
+                    <ul class="list-unstyled">
+                        <li><strong>Дата окончания:</strong> {{ election.end_date|date:"d.m.Y" }}</li>
+                        <li><strong>Кандидатов:</strong> {{ election.candidate_set.count }}</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="/vote/{{ election.id }}" class="btn btn-primary">Проголосовать</a>
+                    <a href="/results/{{ election.id }}" class="btn btn-outline-secondary ms-2">Результаты</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                В данный момент нет активных голосований
+            </div>
+        </div>
         {% endfor %}
-    </ul>
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}

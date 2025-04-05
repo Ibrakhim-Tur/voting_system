@@ -1,0 +1,10 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<h1>Результаты: {{ election.title }}</h1>
+<ul>
+    {% for candidate in candidates %}
+    <li>{{ candidate.name }}: {{ candidate.total_votes }} голосов</li>
+    {% endfor %}
+</ul>
+{% endblock %}

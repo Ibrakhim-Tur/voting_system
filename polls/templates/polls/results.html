@@ -1,10 +1,19 @@
 {% extends 'polls/base.html' %}
 
 {% block content %}
-<h1>Результаты: {{ election.title }}</h1>
-<ul>
-    {% for candidate in candidates %}
-    <li>{{ candidate.name }}: {{ candidate.total_votes }} голосов</li>
-    {% endfor %}
-</ul>
+  <div class="results-container">
+    <h1>Результаты голосования: "{{ election.title }}"</h1>
+
+    {% if candidates %}
+      <ul>
+        {% for candidate in candidates %}
+          <li><strong>{{ candidate.name }}</strong>: {{ candidate.total_votes }} голосов</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Нет данных о кандидатах для этого голосования.</p>
+    {% endif %}
+
+    <a href="{% url 'home' %}">← Вернуться на главную</a>
+  </div>
 {% endblock %}

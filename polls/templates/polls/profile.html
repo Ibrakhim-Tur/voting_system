@@ -1,0 +1,22 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>Ваш профиль</h2>
+
+    {% if user_votes.exists %}
+        <div class="votes-history">
+            <h3>История голосований:</h3>
+            <ul>
+                    <li>
+                        <strong>{{ vote.election.title }}</strong>:
+                        Вы проголосовали за <em>{{ vote.candidate.name }}</em>
+                        <small>({{ vote.voted_at|date:"d.m.Y H:i" }})</small>
+                    </li>
+            </ul>
+        </div>
+    {% else %}
+        <p>Вы ещё не участвовали в голосованиях.</p>
+    {% endif %}
+</div>
+{% endblock %}

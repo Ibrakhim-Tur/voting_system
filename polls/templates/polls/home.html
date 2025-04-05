@@ -19,14 +19,14 @@
                     </ul>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <a href="/vote/{{ election.id }}" class="btn btn-primary">Проголосовать</a>
-                    <a href="/results/{{ election.id }}" class="btn btn-outline-secondary ms-2">Результаты</a>
+                    <a href="{% url 'vote' election.id %}" class="btn btn-primary">Проголосовать</a>
+                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary ms-2">Результаты</a>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12">
-            <div class="alert alert-info text-center">
+            <div class="text-center p-3" style="background-color: #d1f3f9; border-radius: 10px;">
                 В данный момент нет активных голосований
             </div>
         </div>

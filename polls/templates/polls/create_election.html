@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать голосование | Система онлайн-голосований</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Иконки Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-bar-chart-line"></i> Голосовалка
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="#"><i class="bi bi-house"></i> Главная</a>
+                <a class="nav-link" href="#"><i class="bi bi-person"></i> Профиль</a>
+                <a class="nav-link btn btn-outline-light ms-2" href="#"><i class="bi bi-plus-circle"></i> Создать голосование</a>
+                <a class="nav-link" href="#"><i class="bi bi-gear"></i> Admin</a>
+                <a class="nav-link text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card p-4">
+                    <h2 class="text-center mb-4"><i class="bi bi-plus-lg"></i> Создать новое голосование</h2>
+
+                    <!-- Форма -->
+                    <form>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Название голосования</label>
+                            <input type="text" class="form-control" id="title" placeholder="Введите название">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Описание</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Варианты ответов</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="Вариант 1">
+                                <button class="btn btn-outline-danger" type="button"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Добавить вариант</button>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить голосование</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer class="footer mt-5 py-3 text-center">
+        <div class="container">
+            <span>© 2025 Система онлайн-голосований. Все права защищены.</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

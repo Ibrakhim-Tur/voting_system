@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Заголовок + кнопка для админа -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Активные голосования</h1>
+        {% if user.is_staff %}
+            <a href="{% url 'create_election' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle me-2"></i>Новое голосование
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Список голосований -->
+    <div class="row">
+        {% for election in elections %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ election.title }}</h5>
+                        <p class="card-text">{{ election.description|truncatechars:100 }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'election_detail' election.id %}" class="btn btn-outline-primary">
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">Нет активных голосований.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

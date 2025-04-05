@@ -1,0 +1,15 @@
+{% extends 'polls/base.html' %}
+
+{% block title %}Голосование{% endblock %}
+
+{% block content %}
+<h2>Голосование: {{ election.title }}</h2>
+<p>{{ election.description }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-primary">Проголосовать</button>
+</form>
+{% endblock %}

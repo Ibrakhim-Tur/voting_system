@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Заголовок + кнопка для админа -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Активные голосования</h1>
         {% if user.is_staff %}
@@ -12,7 +11,7 @@
         {% endif %}
     </div>
 
-    <!-- Список голосований -->
+
     <div class="row">
         {% for election in elections %}
             <div class="col-md-4 mb-4">
@@ -22,6 +21,15 @@
                         <p class="card-text">{{ election.description|truncatechars:100 }}</p>
                     </div>
                     <div class="card-footer">
+                       {% if election.is_currently_active %}
+                <a href="{% url 'vote' election.id %}" class="btn btn-primary">
+                    Проголосовать
+                </a>
+            {% else %}
+                <button class="btn btn-secondary" disabled>
+                    Голосование завершено
+                </button>
+            {% endif %}
                         <a href="{% url 'election_detail' election.id %}" class="btn btn-outline-primary">
                             Подробнее
                         </a>

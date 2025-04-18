@@ -1,46 +1,56 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.validators import MinLengthValidator
-from django.core.validators import FileExtensionValidator
+from django.core.validators import MinLengthValidator, FileExtensionValidator
+
+
+import uuid
+from django.utils.text import slugify
+
+
+
+from django.utils.crypto import get_random_string
+
+
+
+
 
 class Election(models.Model):
-    title = models.CharField(
-        max_length=200,
-        validators=[MinLengthValidator(5)],
-        verbose_name='Название выборов'
-    )
-    description = models.TextField(
-        verbose_name='Описание',
-        blank=True
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-    start_date = models.DateTimeField(
-        verbose_name='Дата начала'
-    )
-    end_date = models.DateTimeField(
-        verbose_name='Дата окончания'
-    )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name='Активно'
-    )
+    VISIBILITY_CHOICES = [
+        ('public', 'Публичное'),
+        ('private', 'Приватное'),
+    ]
 
-    class Meta:
-        verbose_name = 'Выборы'
-        verbose_name_plural = 'Выборы'
-        ordering = ['-start_date']
+    title = models.CharField(max_length=200, verbose_name="Название голосования")
+    description = models.TextField(verbose_name="Описание", blank=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Создатель", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(verbose_name="Дата начала")
+    end_date = models.DateTimeField(verbose_name="Дата окончания")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public', verbose_name="Видимость")
+    is_public = models.BooleanField(default=True)
+    invited_users = models.ManyToManyField(User, related_name='invited_elections', blank=True,
+                                           verbose_name="Приглашенные пользователи")
+
+    unique_link = models.CharField(max_length=50, unique=True, blank=True, verbose_name="Уникальная ссылка")
+
+    def save(self, *args, **kwargs):
+        if not self.unique_link and self.visibility == 'private':
+            self.unique_link = get_random_string(length=50)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
 
     @property
     def is_currently_active(self):
-        """Проверяет, активны ли выборы в данный момент"""
         now = timezone.now()
         return self.start_date <= now <= self.end_date and self.is_active
+
+    @property
+    def total_votes(self):
+        return self.votes.count()  # Убедись, что в модели Vote есть related_name='votes'
 
 
 class Candidate(models.Model):
@@ -75,7 +85,6 @@ class Candidate(models.Model):
 
     @property
     def vote_count(self):
-        """Количество голосов за кандидата"""
         return self.votes.count()
 
 
@@ -102,18 +111,16 @@ class Vote(models.Model):
         auto_now_add=True,
         verbose_name='Время голосования'
     )
-
-
     class Meta:
         verbose_name = 'Голос'
         verbose_name_plural = 'Голоса'
+        ordering = ['-voted_at']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'election'],
                 name='unique_user_election_vote'
             )
         ]
-        ordering = ['-voted_at']
 
     def __str__(self):
         return f"{self.user.username} → {self.candidate.name} ({self.election.title})"
@@ -134,6 +141,13 @@ class ElectionOption(models.Model):
         verbose_name='Описание',
         blank=True
     )
+    photo = models.ImageField(
+        upload_to='candidates/',
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+        null=True,
+        blank=True,
+        verbose_name='Фото'
+    )
 
     class Meta:
         verbose_name = 'Вариант выборов'
@@ -142,15 +156,10 @@ class ElectionOption(models.Model):
     def __str__(self):
         return f"{self.text} ({self.election.title})"
 
-    photo = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        verbose_name='Ссылка на фото'
-    )
-    photo = models.ImageField(
-        upload_to='candidates/',
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
-        null=True,
-        blank=True
-    )
+creator = models.ForeignKey(
+    User,
+    on_delete=models.CASCADE,
+    verbose_name="Создатель",
+    null=True,  # временно разрешаем null
+    blank=True
+)

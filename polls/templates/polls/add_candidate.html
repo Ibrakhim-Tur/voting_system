@@ -1,0 +1,16 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Добавить кандидата в: "{{ election.title }}"</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label">Имя кандидата</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить</button>
+        <a href="{% url 'manage_election' election.id %}" class="btn btn-secondary">Назад</a>
+    </form>
+</div>
+{% endblock %}

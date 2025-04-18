@@ -4,8 +4,9 @@
 <div class="container mt-5">
     <h1 class="display-4 mb-4 text-center">Активные голосования</h1>
 
+
     <div class="row row-cols-1 row-cols-md-2 g-4">
-        {% for election in elections %}
+        {% for election in page_obj %}
         <div class="col">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-primary text-white">
@@ -14,23 +15,83 @@
                 <div class="card-body">
                     <p class="card-text">{{ election.description|default:"Описание отсутствует" }}</p>
                     <ul class="list-unstyled">
-                        <li><strong>Дата окончания:</strong> {{ election.end_date|date:"d.m.Y" }}</li>
-                        <li><strong>Кандидатов:</strong> {{ election.candidate_set.count }}</li>
+                        <li><strong>Дата начала:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Дата окончания:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
                     </ul>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <a href="{% url 'vote' election.id %}" class="btn btn-primary">Проголосовать</a>
-                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary ms-2">Результаты</a>
+                    {% if election.is_currently_active %}
+                        <a href="{% url 'vote' election.id %}" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Проголосовать
+                        </a>
+                    {% else %}
+                        <span class="btn btn-secondary disabled">
+                            <i class="bi bi-clock-history"></i> Голосование завершено
+                        </span>
+                    {% endif %}
+                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-bar-chart"></i> Результаты
+                    </a>
+                    {% if user.is_superuser or election.creator == user %}
+                    <div class="mt-2">
+                        <a href="{% url 'manage_election' election.id %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-gear"></i> Управление
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_superuser %}
+                    <div class="mt-2">
+                        <a href="/admin/polls/election/{{ election.id }}/change/"
+                           class="btn btn-sm btn-outline-info"
+                           target="_blank">
+                            <i class="bi bi-gear"></i> Управление
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12">
             <div class="text-center p-3" style="background-color: #d1f3f9; border-radius: 10px;">
-                В данный момент нет активных голосований
+                <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">Нет активных голосований</h4>
+                <p class="mb-0">Проверьте позже или создайте новое голосование</p>
             </div>
         </div>
         {% endfor %}
     </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Первая</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}

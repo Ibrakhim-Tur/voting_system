@@ -1,0 +1,22 @@
+{% extends "polls/base.html" %}
+{% block content %}
+  <div class="container mt-5">
+    <h2>Публичные голосования</h2>
+
+    {% if elections %}
+      <ul class="list-group mt-3">
+        {% for election in elections %}
+          <li class="list-group-item">
+            <strong>{{ election.title }}</strong><br>
+            С {{ election.start_date|date:"d.m.Y H:i" }} по {{ election.end_date|date:"d.m.Y H:i" }}
+            <a href="{% url 'vote' slug=election.slug %}" class="btn btn-sm btn-outline-primary float-end">Проголосовать</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Нет доступных голосований.</p>
+    {% endif %}
+
+    <a href="{% url 'create_election' %}" class="btn btn-success mt-4">Создать новое голосование</a>
+  </div>
+{% endblock %}

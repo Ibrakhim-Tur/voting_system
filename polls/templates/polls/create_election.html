@@ -1,89 +1,164 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Создать голосование | Система онлайн-голосований</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Иконки Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar-brand {
-            font-weight: 600;
-        }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .footer {
-            background-color: #343a40;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <!-- Навигационная панель -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-bar-chart-line"></i> Голосовалка
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link active" href="#"><i class="bi bi-house"></i> Главная</a>
-                <a class="nav-link" href="#"><i class="bi bi-person"></i> Профиль</a>
-                <a class="nav-link btn btn-outline-light ms-2" href="#"><i class="bi bi-plus-circle"></i> Создать голосование</a>
-                <a class="nav-link" href="#"><i class="bi bi-gear"></i> Admin</a>
-                <a class="nav-link text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Выйти</a>
-            </div>
-        </div>
-    </nav>
+{% extends 'polls/base.html' %}
 
-    <!-- Основной контент -->
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card p-4">
-                    <h2 class="text-center mb-4"><i class="bi bi-plus-lg"></i> Создать новое голосование</h2>
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-megaphone me-2"></i>Создать новое голосование</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="pollForm">
+                        {% csrf_token %}
 
-                    <!-- Форма -->
-                    <form>
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Название голосования</label>
-                            <input type="text" class="form-control" id="title" placeholder="Введите название">
+                        <!-- Название голосования -->
+                        <div class="mb-4">
+                            <label for="id_title" class="form-label fw-bold">Название голосования*</label>
+                            <input type="text" name="title" id="id_title" class="form-control form-control-lg"
+                                   placeholder="Введите название" required>
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                            {% endif %}
                         </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Описание</label>
-                            <textarea class="form-control" id="description" rows="3"></textarea>
+
+                        <!-- Описание -->
+                        <div class="mb-4">
+                            <label for="id_description" class="form-label fw-bold">Описание</label>
+                            <textarea name="description" id="id_description" class="form-control"
+                                      rows="3" placeholder="Добавьте описание (необязательно)"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Варианты ответов</label>
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" placeholder="Вариант 1">
-                                <button class="btn btn-outline-danger" type="button"><i class="bi bi-trash"></i></button>
+
+                        <!-- Тип голосования -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold d-block">Тип голосования*</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="visibility" id="public" value="public" checked>
+                                <label class="form-check-label" for="public">
+                                    <i class="bi bi-globe me-1"></i> Публичное
+                                </label>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Добавить вариант</button>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="visibility" id="private" value="private">
+                                <label class="form-check-label" for="private">
+                                    <i class="bi bi-lock me-1"></i> Приватное
+                                </label>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                <span id="visibilityHelp" class="form-text">
+                                    Публичное - видят все пользователи. Приватное - только по ссылке или приглашению.
+                                </span>
+                            </div>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Сохранить голосование</button>
+
+                        <!-- Приглашения (только для приватного) -->
+                        <div class="mb-4" id="inviteSection" style="display:none;">
+                            <label class="form-label fw-bold">Пригласить пользователей</label>
+                            <select name="invited_users" multiple class="form-select" id="invitedUsers">
+                                {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.username }} ({{ user.email|default:"нет email" }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small">Выберите пользователей, которые смогут участвовать</div>
+                        </div>
+
+                        <!-- Варианты ответов -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Варианты ответов*</label>
+                            <div id="optionsContainer">
+                                <div class="input-group mb-2 option-field">
+                                    <input type="text" name="option1" class="form-control" placeholder="Вариант 1" required>
+                                    <button class="btn btn-outline-danger remove-option" type="button">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary mt-2" id="addOption">
+                                <i class="bi bi-plus-circle"></i> Добавить вариант
+                            </button>
+                        </div>
+
+                        <!-- Кнопка отправки -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-3">
+                                <i class="bi bi-check-circle me-2"></i>Создать голосование
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Подвал -->
-    <footer class="footer mt-5 py-3 text-center">
-        <div class="container">
-            <span>© 2025 Система онлайн-голосований. Все права защищены.</span>
-        </div>
-    </footer>
+<script>
+    // Динамическое добавление вариантов
+    document.getElementById('addOption').addEventListener('click', function() {
+        const container = document.getElementById('optionsContainer');
+        const count = container.querySelectorAll('.option-field').length + 1;
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 option-field';
+        div.innerHTML = `
+            <input type="text" name="option${count}" class="form-control" placeholder="Вариант ${count}" required>
+            <button class="btn btn-outline-danger remove-option" type="button">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+
+    // Удаление вариантов
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-option')) {
+            const fields = document.querySelectorAll('.option-field');
+            if (fields.length > 1) {
+                e.target.closest('.option-field').remove();
+            } else {
+                alert('Должен остаться хотя бы один вариант!');
+            }
+        }
+    });
+
+    // Показываем/скрываем блок приглашений
+    document.querySelectorAll('input[name="visibility"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('inviteSection').style.display =
+                this.value === 'private' ? 'block' : 'none';
+        });
+    });
+
+    // Валидация перед отправкой
+    document.getElementById('pollForm').addEventListener('submit', function(e) {
+        const options = document.querySelectorAll('input[name^="option"]');
+        if (options.length === 0) {
+            e.preventDefault();
+            alert('Добавьте хотя бы один вариант ответа!');
+            return;
+        }
+
+        // Проверяем заполненность вариантов
+        let valid = true;
+        options.forEach(opt => {
+            if (!opt.value.trim()) {
+                opt.classList.add('is-invalid');
+                valid = false;
+            }
+        });
+
+        if (!valid) {
+            e.preventDefault();
+            alert('Все варианты ответов должны быть заполнены!');
+        }
+    });
+</script>
+
+<style>
+    .option-field input.is-invalid {
+        border-color: #dc3545;
+    }
+    #invitedUsers {
+        min-height: 120px;
+    }
+</style>
+{% endblock %}

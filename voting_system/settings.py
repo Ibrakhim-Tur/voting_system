@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'polls',
     'import_export',
+
+
 ]
 
 MIDDLEWARE = [
@@ -56,7 +60,7 @@ ROOT_URLCONF = 'voting_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -125,11 +129,15 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = 'static/'
 
-# voting_system/settings.py
+TIME_ZONE = 'Asia/Almaty'
+USE_TZ = True
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.yandex.ru'  # или другой SMTP-сервер
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ваш_email@yandex.ru'
-EMAIL_HOST_PASSWORD = 'ваш_пароль'
-DEFAULT_FROM_EMAIL = 'ваш_email@yandex.ru'
+EMAIL_HOST_USER = 'ibrahim06turli@gmail.com'  # Ваш полный Gmail-адрес
+EMAIL_HOST_PASSWORD = 'lvux cvad prws oajo'  # Пароль приложения из шага 3
+DEFAULT_FROM_EMAIL = 'ibrahim06turli@gmail.com'  # Обычно такой же как EMAIL_HOST_USER

@@ -31,5 +31,16 @@ class VoteTest(TestCase):
         response = self.client.post(reverse('vote', args=[self.election.id]), {
             'candidate': self.candidate.id
         })
-        self.assertEqual(Vote.objects.count(), 1)  # не увеличивается
-        self.assertEqual(response.status_code, 400)  # ты используешь 400 в views.py
+        self.assertEqual(Vote.objects.count(), 1)
+        self.assertEqual(response.status_code, 400)
+
+
+class UserDashboardTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.election = Election.objects.create(title="Test Election")
+
+    def test_dashboard_access(self):
+        self.client.login(username='testuser', password='12345')
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.status_code, 200)

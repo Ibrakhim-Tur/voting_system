@@ -1,22 +1,118 @@
 {% extends 'polls/base.html' %}
 
 {% block content %}
-<div class="profile-container">
-    <h2>Ваш профиль</h2>
-
-    {% if user_votes.exists %}
-        <div class="votes-history">
-            <h3>История голосований:</h3>
-            <ul>
-                    <li>
-                        <strong>{{ vote.election.title }}</strong>:
-                        Вы проголосовали за <em>{{ vote.candidate.name }}</em>
-                        <small>({{ vote.voted_at|date:"d.m.Y H:i" }})</small>
-                    </li>
-            </ul>
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>Профиль: {{ user.username }}
+                </h3>
+                <span class="badge bg-light text-dark">
+                    <i class="bi bi-check-circle me-1"></i>Голосов: {{ total_votes }}
+                </span>
+            </div>
         </div>
-    {% else %}
-        <p>Вы ещё не участвовали в голосованиях.</p>
-    {% endif %}
+
+        <div class="card-body">
+            <!-- Основная информация -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-info-circle me-2"></i>Основная информация
+                            </h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="bi bi-envelope me-2"></i>
+                                    <strong>Email:</strong> {{ user.email|default:"не указан" }}
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-calendar-check me-2"></i>
+                                    <strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- История голосований -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>История голосований
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    {% if user_votes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 35%">Голосование</th>
+                                        <th style="width: 25%">Кандидат</th>
+                                        <th style="width: 20%">Дата</th>
+                                        <th style="width: 20%">Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vote in user_votes %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'results' vote.election.id %}" class="text-decoration-none">
+                                                {{ vote.election.title }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                {{ vote.candidate.name }}
+                                            </span>
+                                        </td>
+                                        <td>{{ vote.voted_at|date:"d.m.Y H:i" }}</td>
+                                        <td>
+                                            {% if vote.is_election_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-activity"></i> Активно
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-archive"></i> Завершено
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Система не обнаружила ваших голосов. Если вы только что голосовали,
+                            попробуйте <a href="{% url 'home' %}" class="alert-link">обновить страницу</a>.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .card{
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+    }
+</style>
 {% endblock %}

@@ -14,28 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from polls import views
-
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('register/', views.register, name='register'),
-    path('', views.home, name='home'),
-    path('login/', auth_views.LoginView.as_view(template_name='polls/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('', include('polls.urls')),
-    path('create-election/', views.create_election, name='create_election'),
-    path('polls/', include('polls.urls')),
+    path('', include('polls.urls')),  # Основные маршруты (главная страница, регистрация)
+    path('polls/', include('polls.urls')), # Альтернативный префикс (опционально)
 
 
-    path('elections/<int:election_id>/vote/', views.vote, name='vote'),
-    path('elections/<int:election_id>/results/', views.results, name='results'),
-    path('profile/', views.profile, name='profile'),
+
+    # Маршруты аутентификации
     path('accounts/login/', auth_views.LoginView.as_view(template_name='polls/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('accounts/password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
@@ -43,5 +33,4 @@ urlpatterns = [
     path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(),
          name='password_reset_confirm'),
     path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-
 ]

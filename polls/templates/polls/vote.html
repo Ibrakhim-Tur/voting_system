@@ -1,15 +1,36 @@
 {% extends 'polls/base.html' %}
 
-{% block title %}Голосование{% endblock %}
-
 {% block content %}
-<h2>Голосование: {{ election.title }}</h2>
-<p>{{ election.description }}</p>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>{{ election.title }}</h3>
+        </div>
+        <div class="card-body">
+            <p>{{ election.description }}</p>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+            <form method="post">
+                {% csrf_token %}
 
-    <button type="submit" class="btn btn-primary">Проголосовать</button>
-</form>
+                <h4 class="mb-3">Кандидаты:</h4>
+
+                {% for candidate in form.candidate.field.queryset %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="radio"
+                           name="candidate" id="candidate{{ candidate.id }}"
+                           value="{{ candidate.id }}" required>
+                    <label class="form-check-label" for="candidate{{ candidate.id }}">
+                        <strong>{{ candidate.name }}</strong>
+                        {% if candidate.bio %}<p class="text-muted">{{ candidate.bio }}</p>{% endif %}
+                    </label>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary btn-lg mt-3">
+                    Подтвердить выбор
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

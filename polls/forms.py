@@ -32,21 +32,6 @@ class VoteForm(forms.Form):
 
 
 class ElectionForm(forms.ModelForm):
-    class Meta:
-        model = Election
-        fields = ['title', 'description', 'start_date', 'end_date','is_public','visibility', 'invited_users'  ]
-
-
-        widgets = {
-            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'invited_users': forms.CheckboxSelectMultiple
-        }
-        labels = {
-            'title': 'Название голосования',
-            'description': 'Описание',
-        }
-class ElectionForm(forms.ModelForm):
     invited_users = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
         widget=forms.SelectMultiple(attrs={'class': 'form-control', 'size': '10'}),
@@ -56,4 +41,18 @@ class ElectionForm(forms.ModelForm):
 
     class Meta:
         model = Election
-        fields = ['title', 'description', 'visibility', 'invited_users']
+        fields = ['title', 'description', 'start_date', 'end_date', 'is_public', 'visibility', 'invited_users']
+
+        widgets = {
+            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+        }
+
+        labels = {
+            'title': 'Название голосования',
+            'description': 'Описание',
+        }
+class CandidateForm(forms.ModelForm):
+    class Meta:
+        model = Candidate
+        fields = ['name']  # укажи нужные поля модели

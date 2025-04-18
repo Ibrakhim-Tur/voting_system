@@ -7,7 +7,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="h4 mb-0">Управление голосованием: {{ election.title }}</h2>
                 {% if perms.polls.delete_election %}
-                <form method="post" action="{% url 'polls:delete_election' election.id %}" class="d-inline">
+                <form method="post" action="{% url 'delete_election' election.id %}" class="d-inline">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger btn-sm"
                             onclick="return confirm('Вы уверены, что хотите удалить это голосование?')">
@@ -39,7 +39,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="h5">Кандидаты</h4>
                     {% if perms.polls.add_candidate %}
-                    <a href="{% url 'polls:add_candidate' election.id %}" class="btn btn-success btn-sm">
+                    <a href="{% url 'add_candidate' election.id %}" class="btn btn-success btn-sm">
                         <i class="bi bi-plus-circle"></i> Добавить кандидата
                     </a>
                     {% endif %}
@@ -54,7 +54,7 @@
                             <small class="text-muted">ID: {{ candidate.id }}</small>
                         </div>
                         {% if perms.polls.delete_candidate %}
-                        <form method="post" action="{% url 'polls:delete_candidate' election.id candidate.id %}" class="d-inline">
+                        <form method="post" action="{% url 'delete_candidate' election.id candidate.id %}" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-danger btn-sm"
                                     onclick="return confirm('Удалить кандидата {{ candidate.name }}?')">
@@ -75,11 +75,7 @@
 
         <div class="card-footer bg-light">
             <div class="d-flex justify-content-between">
-                {% if perms.polls.change_election %}
-                <a href="{% url 'polls:edit_election' election.id %}" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil"></i> Редактировать голосование
-                </a>
-                {% endif %}
+
                 <small class="text-muted">Создано: {{ election.created_at|date:"d.m.Y H:i" }}</small>
             </div>
         </div>

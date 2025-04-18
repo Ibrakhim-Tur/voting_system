@@ -129,7 +129,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="bi bi-check2-square me-2"></i>Томи ухтишка
+                <i class="bi bi-check2-square me-2"></i>Голосования
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -150,6 +150,12 @@
                         </a>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                         <a class="nav-link {% if request.resolver_match.url_name == 'my_private_elections' %}active{% endif %}"
+                            href="{% url 'my_private_elections' %}">
+                             <i class="bi bi-lock"></i> Мои приватные голосования
+                         </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}

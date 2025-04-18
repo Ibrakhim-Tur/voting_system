@@ -1,0 +1,30 @@
+{% extends "polls/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Мои приватные голосования</h2>
+
+  {% if elections %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      {% for election in elections %}
+        <div class="col">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <h5 class="card-title">{{ election.title }}</h5>
+              <p class="card-text text-muted">{{ election.description|default:"(без описания)" }}</p>
+              <p class="card-text">
+                <small class="text-body-secondary">Действует до: {{ election.end_date|date:"d.m.Y H:i" }}</small>
+              </p>
+              <a href="{% url 'vote_by_invite' election.unique_link %}" class="btn btn-primary">Перейти к голосованию</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center mt-4">
+      У вас пока нет приватных голосований.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

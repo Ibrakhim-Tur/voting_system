@@ -51,7 +51,7 @@
                             </div>
                         </div>
 
-                        <!-- Приглашения (только для приватного) -->
+                        <!-- Приглашения -->
                         <div class="mb-4" id="inviteSection" style="display:none;">
                             <label class="form-label fw-bold">Пригласить пользователей</label>
                             <select name="invited_users" multiple class="form-select" id="invitedUsers">
@@ -62,28 +62,17 @@
                             <div class="form-text small">Выберите пользователей, которые смогут участвовать</div>
                         </div>
 
-                        <!-- Варианты ответов -->
+                        <!-- Кандидаты -->
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Варианты ответов*</label>
-                            <div id="optionsContainer">
-                                <div class="input-group mb-2 option-field">
-                                    <input type="text" name="option1" class="form-control" placeholder="Вариант 1" required>
-                                    <button class="btn btn-outline-danger remove-option" type="button">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                            <label class="form-label fw-bold">Кандидаты*</label>
+                            <div id="options-container">
+                                <input type="text" name="option1" class="form-control my-2" placeholder="Кандидат 1" required>
+                                <input type="text" name="option2" class="form-control my-2" placeholder="Кандидат 2" required>
                             </div>
-                            <button type="button" class="btn btn-outline-primary mt-2" id="addOption">
-                                <i class="bi bi-plus-circle"></i> Добавить вариант
-                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addOption()">+ Добавить кандидата</button>
                         </div>
 
-                        <!-- Кнопка отправки -->
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg py-3">
-                                <i class="bi bi-check-circle me-2"></i>Создать голосование
-                            </button>
-                        </div>
+                        <button type="submit" class="btn btn-success w-100">Создать голосование</button>
                     </form>
                 </div>
             </div>
@@ -91,74 +80,37 @@
     </div>
 </div>
 
+<!-- Скрипты -->
 <script>
-    // Динамическое добавление вариантов
-    document.getElementById('addOption').addEventListener('click', function() {
-        const container = document.getElementById('optionsContainer');
-        const count = container.querySelectorAll('.option-field').length + 1;
+    let optionCount = 2;
+    function addOption() {
+        optionCount++;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = "option" + optionCount;
+        input.className = "form-control my-2";
+        input.placeholder = "Кандидат " + optionCount;
+        document.getElementById("options-container").appendChild(input);
+    }
 
-        const div = document.createElement('div');
-        div.className = 'input-group mb-2 option-field';
-        div.innerHTML = `
-            <input type="text" name="option${count}" class="form-control" placeholder="Вариант ${count}" required>
-            <button class="btn btn-outline-danger remove-option" type="button">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        container.appendChild(div);
-    });
+    // Показ/скрытие поля с приглашениями
+    document.addEventListener("DOMContentLoaded", function () {
+        const visibilityRadios = document.querySelectorAll("input[name='visibility']");
+        const inviteSection = document.getElementById("inviteSection");
 
-    // Удаление вариантов
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-option')) {
-            const fields = document.querySelectorAll('.option-field');
-            if (fields.length > 1) {
-                e.target.closest('.option-field').remove();
-            } else {
-                alert('Должен остаться хотя бы один вариант!');
-            }
-        }
-    });
+        visibilityRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "private" && radio.checked) {
+                    inviteSection.style.display = "block";
+                } else {
+                    inviteSection.style.display = "none";
+                }
+            });
 
-    // Показываем/скрываем блок приглашений
-    document.querySelectorAll('input[name="visibility"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            document.getElementById('inviteSection').style.display =
-                this.value === 'private' ? 'block' : 'none';
-        });
-    });
-
-    // Валидация перед отправкой
-    document.getElementById('pollForm').addEventListener('submit', function(e) {
-        const options = document.querySelectorAll('input[name^="option"]');
-        if (options.length === 0) {
-            e.preventDefault();
-            alert('Добавьте хотя бы один вариант ответа!');
-            return;
-        }
-
-        // Проверяем заполненность вариантов
-        let valid = true;
-        options.forEach(opt => {
-            if (!opt.value.trim()) {
-                opt.classList.add('is-invalid');
-                valid = false;
+            if (radio.value === "private" && radio.checked) {
+                inviteSection.style.display = "block";
             }
         });
-
-        if (!valid) {
-            e.preventDefault();
-            alert('Все варианты ответов должны быть заполнены!');
-        }
     });
 </script>
-
-<style>
-    .option-field input.is-invalid {
-        border-color: #dc3545;
-    }
-    #invitedUsers {
-        min-height: 120px;
-    }
-</style>
 {% endblock %}

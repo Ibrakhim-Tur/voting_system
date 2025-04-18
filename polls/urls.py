@@ -34,4 +34,5 @@ urlpatterns = [
     path('manage/<int:election_id>/candidate/<int:candidate_id>/delete/', views.delete_candidate,
          name='delete_candidate'),
     path('manage/<int:election_id>/edit/', views.edit_election, name='edit_election'),
+    path('my-private/', views.my_private_elections, name='my_private_elections'),
 ]

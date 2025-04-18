@@ -3,10 +3,10 @@ from django.http import HttpResponse,JsonResponse
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Count
+from django.db.models import Count,Q
 from django.contrib.auth.decorators import login_required
 from .models import Election, Candidate, Vote,User
-from .forms import RegisterForm, VoteForm
+from .forms import RegisterForm, VoteForm,CandidateForm
 from .forms import ElectionForm
 from .models import ElectionOption as Option
 from django.utils import timezone
@@ -23,22 +23,32 @@ import random
 
 from django.contrib.auth.models import User
 
-
 def home(request):
     now = timezone.now()
-    election_list = Election.objects.filter(
-        is_public=True,
-        is_active=True,
-        start_date__lte=now,
-        end_date__gte=now
-    ).order_by('-start_date').prefetch_related('candidates')
+
+    if request.user.is_authenticated:
+        election_list = Election.objects.filter(
+            Q(is_public=True) |
+            Q(invited_users=request.user) |
+            Q(creator=request.user)
+        ).filter(
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now
+        ).distinct().order_by('-start_date').prefetch_related('options')
+    else:
+        election_list = Election.objects.filter(
+            is_public=True,
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now
+        ).order_by('-start_date').prefetch_related('options')
 
     paginator = Paginator(election_list, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'polls/home.html', {'page_obj': page_obj})
-
 
 def register(request):
     if request.method == 'POST':
@@ -169,34 +179,37 @@ def create_election(request):
             unique_link=unique_link
         )
 
-        # ✅ Обработка invited_users (несколько)
+        # ✅ Приглашения
         invited_user_ids = request.POST.getlist('invited_users')
         if invited_user_ids:
             invited_users = User.objects.filter(id__in=invited_user_ids)
-            election.invited_users.set(invited_users)  # ManyToMany связь
+            election.invited_users.set(invited_users)
 
-        # Варианты ответа
-        for key in request.POST:
-            if key.startswith('option') and request.POST[key].strip():
-                ElectionOption.objects.create(
+        # ✅ Создание кандидатов из option1, option2, ...
+        for key, value in request.POST.items():
+            if key.startswith('option') and value.strip():
+                Candidate.objects.create(
                     election=election,
-                    text=request.POST[key].strip()
+                    name=value.strip()
                 )
 
         messages.success(request, 'Голосование успешно создано!')
         return redirect('home')
 
-    users = User.objects.exclude(id=request.user.id)  # опционально, исключаем себя
+    users = User.objects.exclude(id=request.user.id)
     return render(request, 'polls/create_election.html', {'users': users})
-
+@login_required
 def election_list(request):
     now = timezone.now()
     elections = Election.objects.filter(
-        is_public=True,
+        Q(is_public=True) |
+        Q(invited_users=request.user) |
+        Q(creator=request.user),
         start_date__lte=now,
         end_date__gte=now,
         is_active=True
-    ).order_by('-start_date')
+    ).distinct().order_by('-start_date')
+
     return render(request, 'polls/election_list.html', {'elections': elections})
 
 
@@ -244,13 +257,22 @@ def manage_election(request, election_id):
 
 
 def add_candidate(request, election_id):
-    if request.method == 'POST':
-        election = get_object_or_404(Election, pk=election_id)
-        name = request.POST.get('name')
-        if name:
-            Candidate.objects.create(election=election, name=name)
-            messages.success(request, 'Кандидат успешно добавлен')
-        return redirect('manage_election', election_id=election_id)
+    election = get_object_or_404(Election, pk=election_id)
+
+    if request.method == "POST":
+        form = CandidateForm(request.POST)
+        if form.is_valid():
+            candidate = form.save(commit=False)
+            candidate.election = election
+            candidate.save()
+            return redirect('manage_election', election.id)
+    else:
+        form = CandidateForm()
+
+    return render(request, 'polls/add_candidate.html', {
+        'form': form,
+        'election': election
+    })
 
 def delete_candidate(request, election_id, candidate_id):
     if request.method == 'POST':
@@ -263,3 +285,15 @@ def edit_election(request, election_id):
     election = get_object_or_404(Election, pk=election_id)
     # Реализуйте логику редактирования
     return redirect('manage_election', election_id=election_id)
+@login_required
+def my_private_elections(request):
+    now = timezone.now()
+    elections = Election.objects.filter(
+        creator=request.user,
+        is_public=False,
+        is_active=True,
+        start_date__lte=now,
+        end_date__gte=now
+    ).order_by('-start_date')
+
+    return render(request, 'polls/my_private_elections.html', {'elections': elections})

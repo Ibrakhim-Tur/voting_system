@@ -1,0 +1,101 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Редактирование голосования: "{{ election.title }}"</h2>
+
+    <!-- Форма редактирования голосования -->
+    <form method="post" action="{% url 'edit_election' election.id %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <!-- Уже приглашённые пользователи -->
+        {% if election.invited_users.all %}
+        <div class="mt-4">
+            <label class="form-label"><strong>Уже приглашённые пользователи</strong></label>
+            {% for user in election.invited_users.all %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="invited_users_remove" value="{{ user.id }}" id="user-remove-{{ user.id }}">
+                <label class="form-check-label" for="user-remove-{{ user.id }}">
+                    {{ user.username }} <span class="text-muted">(удалить)</span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{% url 'manage_election' election.id %}" class="btn btn-secondary">Назад</a>
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- Список кандидатов -->
+    <div class="mt-4">
+        <h4>Кандидаты</h4>
+        {% if candidates %}
+        <ul class="list-group mb-3">
+            {% for candidate in candidates %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ candidate.name }}
+                <!-- Кнопка для открытия модалки -->
+                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteCandidateModal{{ candidate.id }}">
+                    Удалить
+                </button>
+            </li>
+
+            <!-- Модалка подтверждения удаления кандидата -->
+            <div class="modal fade" id="confirmDeleteCandidateModal{{ candidate.id }}" tabindex="-1" aria-labelledby="confirmDeleteCandidateLabel{{ candidate.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="confirmDeleteCandidateLabel{{ candidate.id }}">Удалить кандидата</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                        </div>
+                        <div class="modal-body">
+                            Вы уверены, что хотите удалить кандидата <strong>{{ candidate.name }}</strong>? Это действие необратимо.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <a href="{% url 'delete_candidate' election.id candidate.id %}" class="btn btn-danger">Удалить</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Нет кандидатов.</p>
+        {% endif %}
+
+        <!-- Кнопка открытия модального окна добавления -->
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+            Добавить кандидата
+        </button>
+    </div>
+</div>
+
+<!-- Модальное окно добавления кандидата -->
+<div class="modal fade" id="addCandidateModal" tabindex="-1" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'add_candidate' election.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCandidateModalLabel">Добавить кандидата</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" name="name" placeholder="Имя кандидата" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

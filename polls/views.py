@@ -1,30 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse,JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Count,Q
+from django.db.models import Count, Q, Case, When, BooleanField
 from django.contrib.auth.decorators import login_required
-from .models import Election, Candidate, Vote,User
-from .forms import RegisterForm, VoteForm,CandidateForm
-from .forms import ElectionForm
-from .models import ElectionOption as Option
 from django.utils import timezone
-from django.db import models
+from django.contrib.auth.models import User
+
 import logging
-from django.shortcuts import render, redirect
-from .forms import ElectionForm
-from .models import Election
-from django.http import HttpResponseForbidden
-logger = logging.getLogger(__name__)
-from .models import Election, ElectionOption
 import string
 import random
 
-from django.contrib.auth.models import User
+from .models import Election, Candidate, Vote, ElectionOption as Option
+from .forms import RegisterForm, VoteForm, CandidateForm, ElectionForm
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     now = timezone.now()
+
 
     if request.user.is_authenticated:
         election_list = Election.objects.filter(
@@ -35,7 +29,7 @@ def home(request):
             is_active=True,
             start_date__lte=now,
             end_date__gte=now
-        ).distinct().order_by('-start_date').prefetch_related('options')
+        ).distinct().order_by('-start_date').prefetch_related('options', 'candidates')
     else:
         election_list = Election.objects.filter(
             is_public=True,
@@ -59,7 +53,6 @@ def register(request):
     else:
         form = RegisterForm()
     return render(request, 'polls/register.html', {'form': form})
-
 
 @login_required
 def vote(request, election_id=None, unique_link=None):
@@ -92,7 +85,6 @@ def vote(request, election_id=None, unique_link=None):
 
     return render(request, 'polls/vote.html', {'form': form, 'election': election})
 
-
 def results(request, election_id):
     election = get_object_or_404(Election, id=election_id)
     candidates = Candidate.objects.filter(election=election).annotate(
@@ -103,42 +95,37 @@ def results(request, election_id):
         'candidates': candidates
     })
 
-
 @login_required
 def profile(request):
-    # Получаем голоса пользователя с предзагрузкой связанных данных
     user_votes = Vote.objects.filter(
         user=request.user
     ).select_related(
         'election',
         'candidate'
-    ).order_by('-voted_at')  # Сортировка по дате (новые сначала)
+    ).order_by('-voted_at')
 
-    # Добавляем аннотацию для проверки активности голосований
     user_votes = user_votes.annotate(
-        is_election_active=models.Case(
-            models.When(
+        is_election_active=Case(
+            When(
                 election__start_date__lte=timezone.now(),
                 election__end_date__gte=timezone.now(),
                 election__is_active=True,
                 then=True
             ),
             default=False,
-            output_field=models.BooleanField()
+            output_field=BooleanField()
         )
     )
 
     return render(request, 'polls/profile.html', {
         'user': request.user,
         'user_votes': user_votes,
-        'total_votes': user_votes.count()  # Добавляем общее количество голосов
+        'total_votes': user_votes.count()
     })
-
 
 def index(request):
     elections = Election.objects.all()
     return render(request, 'polls/index.html', {'elections': elections})
-
 
 def election_results(request, election_id):
     election = Election.objects.get(id=election_id)
@@ -152,11 +139,9 @@ def election_results(request, election_id):
         'votes_count': votes_count,
     })
 
-
 @login_required
 def profile_view(request):
     return render(request, 'polls/profile.html')
-
 
 @login_required
 def create_election(request):
@@ -179,13 +164,11 @@ def create_election(request):
             unique_link=unique_link
         )
 
-        # ✅ Приглашения
         invited_user_ids = request.POST.getlist('invited_users')
         if invited_user_ids:
             invited_users = User.objects.filter(id__in=invited_user_ids)
             election.invited_users.set(invited_users)
 
-        # ✅ Создание кандидатов из option1, option2, ...
         for key, value in request.POST.items():
             if key.startswith('option') and value.strip():
                 Candidate.objects.create(
@@ -198,6 +181,7 @@ def create_election(request):
 
     users = User.objects.exclude(id=request.user.id)
     return render(request, 'polls/create_election.html', {'users': users})
+
 @login_required
 def election_list(request):
     now = timezone.now()
@@ -212,52 +196,45 @@ def election_list(request):
 
     return render(request, 'polls/election_list.html', {'elections': elections})
 
-
 def generate_unique_link(length=10):
     while True:
         link = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
         if not Election.objects.filter(unique_link=link).exists():
             return link
 
-
-
-
 @login_required
 def manage_election(request, election_id):
     election = get_object_or_404(Election, id=election_id)
 
+
+    # Проверка прав доступа: только создатель или суперпользователь
     if request.user != election.creator and not request.user.is_superuser:
-        return render(request, '403.html')  # или HttpResponseForbidden()
+        return HttpResponseForbidden()
 
     return render(request, 'polls/manage_election.html', {'election': election})
-def add_candidate(request, election_id):
-    election = get_object_or_404(Election, id=election_id)
 
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        if name:
-            Candidate.objects.create(name=name, election=election)
-            return redirect('manage_election', election_id=election.id)
-
-    return render(request, 'polls/add_candidate.html', {'election': election})
 @login_required
 def delete_election(request, election_id):
     election = get_object_or_404(Election, pk=election_id)
+
+    # Проверка прав доступа: только создатель или суперпользователь
     if request.user != election.creator and not request.user.is_superuser:
         return HttpResponseForbidden()
 
     if request.method == 'POST':
         election.delete()
-        return redirect('home')  # или другой URL после удаления
+        messages.success(request, 'Голосование успешно удалено.')
+        return redirect('home')
 
-    return redirect('manage_election', election_id)
-def manage_election(request, election_id):
-    election = get_object_or_404(Election, pk=election_id)
-    return render(request, 'polls/manage_election.html', {'election': election})
+    return redirect('delete_election', election_id=election_id)
 
-
+@login_required
 def add_candidate(request, election_id):
     election = get_object_or_404(Election, pk=election_id)
+
+    # Проверка прав доступа: только создатель или суперпользователь
+    if request.user != election.creator and not request.user.is_superuser:
+        return HttpResponseForbidden()
 
     if request.method == "POST":
         form = CandidateForm(request.POST)
@@ -265,7 +242,10 @@ def add_candidate(request, election_id):
             candidate = form.save(commit=False)
             candidate.election = election
             candidate.save()
-            return redirect('manage_election', election.id)
+            messages.success(request, 'Кандидат успешно добавлен.')
+            return redirect('edit_election', election_id=election.id)
+        else:
+            messages.error(request, 'Ошибка при добавлении кандидата. Пожалуйста, проверьте форму.')
     else:
         form = CandidateForm()
 
@@ -274,26 +254,77 @@ def add_candidate(request, election_id):
         'election': election
     })
 
+@login_required
 def delete_candidate(request, election_id, candidate_id):
-    if request.method == 'POST':
-        candidate = get_object_or_404(Candidate, pk=candidate_id, election_id=election_id)
-        candidate.delete()
-        messages.success(request, 'Кандидат успешно удален')
-        return redirect('manage_election', election_id=election_id)
+    election = get_object_or_404(Election, id=election_id)
 
+    # Убедимся, что текущий пользователь — создатель голосования
+    if request.user != election.creator:
+        return redirect('home')  # или верни ошибку доступа
+
+    candidate = get_object_or_404(Candidate, id=candidate_id, election=election)
+    candidate.delete()
+    return redirect('edit_election', election_id=election.id)
+@login_required
 def edit_election(request, election_id):
     election = get_object_or_404(Election, pk=election_id)
-    # Реализуйте логику редактирования
-    return redirect('manage_election', election_id=election_id)
+
+    # Проверка на создателя
+    if request.user != election.creator and not request.user.is_superuser:
+        messages.error(request, "Вы не можете редактировать это голосование.")
+        return redirect('home')
+
+    candidates = Candidate.objects.filter(election=election)
+    users = User.objects.exclude(id=request.user.id)  # не показываем самого себя
+
+    if request.method == 'POST':
+        form = ElectionForm(request.POST, instance=election)
+        if form.is_valid():
+            form.save()
+
+            # Добавление новых пользователей
+            invited_users_add = request.POST.getlist('invited_users_add')
+            for user_id in invited_users_add:
+                try:
+                    user = User.objects.get(pk=user_id)
+                    election.invited_users.add(user)
+                except User.DoesNotExist:
+                    pass
+
+            # Удаление приглашённых
+            invited_users_remove = request.POST.getlist('invited_users_remove')
+            for user_id in invited_users_remove:
+                try:
+                    user = User.objects.get(pk=user_id)
+                    election.invited_users.remove(user)
+                except User.DoesNotExist:
+                    pass
+
+            messages.success(request, "Изменения сохранены.")
+            return redirect('manage_election', election.id)
+    else:
+        form = ElectionForm(instance=election)
+
+    context = {
+        'election': election,
+        'form': form,
+        'candidates': candidates,
+        'users': users,
+    }
+    return render(request, 'polls/edit_election.html', context)
+
 @login_required
 def my_private_elections(request):
     now = timezone.now()
+
     elections = Election.objects.filter(
-        creator=request.user,
         is_public=False,
         is_active=True,
         start_date__lte=now,
         end_date__gte=now
-    ).order_by('-start_date')
+    ).filter(
+        Q(creator=request.user) | Q(invited_users=request.user)
+    ).distinct().order_by('-start_date').prefetch_related('options', 'candidates')
 
     return render(request, 'polls/my_private_elections.html', {'elections': elections})
+

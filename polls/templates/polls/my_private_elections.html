@@ -1,30 +1,53 @@
-{% extends "polls/base.html" %}
+{% extends 'polls/base.html' %}
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Мои приватные голосования</h2>
+  <h2 class="mb-4">Приватные голосования</h2>
 
   {% if elections %}
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
       {% for election in elections %}
         <div class="col">
-          <div class="card shadow-sm border-0 h-100">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+              <span>{{ election.title }}</span>
+              <span class="badge bg-warning text-dark">Приватное</span>
+            </div>
             <div class="card-body">
-              <h5 class="card-title">{{ election.title }}</h5>
-              <p class="card-text text-muted">{{ election.description|default:"(без описания)" }}</p>
-              <p class="card-text">
-                <small class="text-body-secondary">Действует до: {{ election.end_date|date:"d.m.Y H:i" }}</small>
-              </p>
-              <a href="{% url 'vote_by_invite' election.unique_link %}" class="btn btn-primary">Перейти к голосованию</a>
+              <p class="card-text">{{ election.description|default:"Без описания." }}</p>
+              <ul class="list-unstyled">
+                <li><strong>Начало:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
+                <li><strong>Окончание:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
+                <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
+                <li>
+                  <strong>Вы:</strong>
+                  {% if election.creator == user %}
+                    Создатель
+                  {% else %}
+                    Приглашённый
+                  {% endif %}
+                </li>
+              </ul>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between flex-wrap gap-2">
+              <a href="{% url 'vote' election.id %}" class="btn btn-outline-primary btn-sm w-100">
+                <i class="bi bi-check-circle"></i> Проголосовать
+              </a>
+              <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-bar-chart"></i> Результаты
+              </a>
+              {% if user.is_superuser or election.creator == user %}
+                <a href="{% url 'manage_election' election.id %}" class="btn btn-outline-dark btn-sm w-100">
+                  <i class="bi bi-gear"></i> Управление
+                </a>
+              {% endif %}
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    <div class="alert alert-info text-center mt-4">
-      У вас пока нет приватных голосований.
-    </div>
+    <div class="alert alert-info">У вас нет активных приватных голосований.</div>
   {% endif %}
 </div>
 {% endblock %}

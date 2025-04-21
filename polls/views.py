@@ -7,6 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+from django.urls import reverse
+from .utils import generate_qr_code
+
 import logging
 import string
 import random
@@ -16,23 +19,23 @@ from .forms import RegisterForm, VoteForm, CandidateForm, ElectionForm
 
 logger = logging.getLogger(__name__)
 
+@login_required
 def home(request):
     now = timezone.now()
 
-
     if request.user.is_authenticated:
+        # Только публичные голосования для авторизованных пользователей
         election_list = Election.objects.filter(
-            Q(is_public=True) |
-            Q(invited_users=request.user) |
-            Q(creator=request.user)
+            is_public=True,  # Публичные голосования
         ).filter(
             is_active=True,
             start_date__lte=now,
             end_date__gte=now
-        ).distinct().order_by('-start_date').prefetch_related('options', 'candidates')
+        ).order_by('-start_date').prefetch_related('options', 'candidates')
     else:
+        # Для неавторизованных пользователей только публичные голосования
         election_list = Election.objects.filter(
-            is_public=True,
+            is_public=True,  # Публичные голосования
             is_active=True,
             start_date__lte=now,
             end_date__gte=now
@@ -41,6 +44,11 @@ def home(request):
     paginator = Paginator(election_list, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # Генерация QR-кодов для публичных голосований
+    for election in page_obj:
+        vote_url = request.build_absolute_uri(reverse('vote', args=[election.id]))
+        election.qr_code = generate_qr_code(vote_url)
 
     return render(request, 'polls/home.html', {'page_obj': page_obj})
 
@@ -326,5 +334,12 @@ def my_private_elections(request):
         Q(creator=request.user) | Q(invited_users=request.user)
     ).distinct().order_by('-start_date').prefetch_related('options', 'candidates')
 
-    return render(request, 'polls/my_private_elections.html', {'elections': elections})
+    paginator = Paginator(elections, 6)  # Ограничение 6 голосования на страницу
+    page_number = request.GET.get('page')
+    elections_page = paginator.get_page(page_number)
 
+    for election in elections_page:
+        vote_url = request.build_absolute_uri(reverse('vote', args=[election.id]))
+        election.qr_code = generate_qr_code(vote_url)
+
+    return render(request, 'polls/my_private_elections.html', {'elections': elections_page})

@@ -4,82 +4,61 @@
 <div class="container mt-5">
     <h1 class="display-4 mb-4 text-center">Активные голосования</h1>
 
+    {% if page_obj %}
     <div class="row row-cols-1 row-cols-md-2 g-4">
         {% for election in page_obj %}
         <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">{{ election.title }}</h5>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span>{{ election.title }}</span>
+                    {% if election.is_public %}
+                    <span class="badge bg-success">Публичное</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Приватное</span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
-                    <p class="card-text">{{ election.description|default:"Описание отсутствует" }}</p>
+                    <p class="card-text">{{ election.description|default:"Без описания." }}</p>
                     <ul class="list-unstyled">
-                        <li><strong>Дата начала:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
-                        <li><strong>Дата окончания:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Начало:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Окончание:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
                         <li>
-                              <strong>Осталось:</strong>
-                              <span id="timer-{{ election.id }}" data-end="{{ election.end_date|date:'Y-m-d\\TH:i:s' }}"></span>
-
+                            <strong>Осталось:</strong>
+                            <span id="timer-{{ election.id }}" data-end="{{ election.end_date|date:'Y-m-d\\TH:i:s' }}"></span>
                         </li>
-
                         <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
                     </ul>
-
-                    {% if election.electionoption_set.all %}
-                        <p><strong>Варианты:</strong></p>
-                        <ul class="list-group list-group-flush mb-3">
-                            {% for option in election.electionoption_set.all %}
-                                <li class="list-group-item">{{ option.text }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
                 </div>
 
-                <div class="card-footer bg-transparent">
+                <div class="card-footer bg-light d-flex justify-content-between flex-wrap gap-2">
                     {% if election.is_currently_active %}
-                        <a href="{% url 'vote' election.id %}" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Проголосовать
-                        </a>
+                    <a href="{% url 'vote' election.id %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-check-circle"></i> Проголосовать
+                    </a>
                     {% else %}
-                        <span class="btn btn-secondary disabled">
-                            <i class="bi bi-clock-history"></i> Голосование завершено
-                        </span>
+                    <span class="btn btn-secondary disabled">
+                        <i class="bi bi-clock-history"></i> Голосование завершено
+                    </span>
                     {% endif %}
-                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary ms-2">
+                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary btn-sm w-100">
                         <i class="bi bi-bar-chart"></i> Результаты
                     </a>
                     {% if user.is_superuser or election.creator == user %}
-                    <div class="mt-2">
-                        <a href="{% url 'manage_election' election.id %}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-gear"></i> Управление
-                        </a>
-                    </div>
+                    <a href="{% url 'manage_election' election.id %}" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="bi bi-gear"></i> Управление
+                    </a>
                     {% endif %}
-
-                    {% if user.is_superuser %}
-                    <div class="mt-2">
-                        <a href="/admin/polls/election/{{ election.id }}/change/"
-                           class="btn btn-sm btn-outline-info"
-                           target="_blank">
-                            <i class="bi bi-gear"></i> Управление
-                        </a>
+                    <div class="text-center mt-3">
+                        <img src="{{ election.qr_code }}" alt="QR Code" class="img-thumbnail" style="width: 150px; margin-left: 20px;">
+                        <p class="small text-muted mt-1">Сканируйте для голосования</p>
                     </div>
-                    {% endif %}
                 </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="text-center p-3" style="background-color: #d1f3f9; border-radius: 10px;">
-                <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
-                <h4 class="mt-2">Нет активных голосований</h4>
-                <p class="mb-0">Проверьте позже или создайте новое голосование</p>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
+    <!-- Пагинация -->
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
@@ -107,6 +86,9 @@
             {% endif %}
         </ul>
     </nav>
+
+    {% else %}
+    <div class="alert alert-info text-center">У вас нет активных голосований.</div>
     {% endif %}
 </div>
 {% endblock %}

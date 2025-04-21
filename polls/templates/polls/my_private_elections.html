@@ -18,6 +18,11 @@
               <ul class="list-unstyled">
                 <li><strong>Начало:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
                 <li><strong>Окончание:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
+                <li>
+                    <strong>Осталось:</strong>
+                    <span id="timer-{{ election.id }}" data-end="{{ election.end_date|date:'Y-m-d\\TH:i:s' }}"></span>
+                </li>
+
                 <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
                 <li>
                   <strong>Вы:</strong>

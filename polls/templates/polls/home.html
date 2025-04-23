@@ -102,6 +102,8 @@
         <ul class="list-group list-group-flush">
           {% for user in top_users %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
+        <!-- Отображение номера места -->
+            <span class="badge bg-secondary rounded-pill">{{ forloop.counter }}</span>
             {{ user.username }}
             <span class="badge bg-primary rounded-pill">{{ user.vote_count }}</span>
           </li>
@@ -111,6 +113,7 @@
         </ul>
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}

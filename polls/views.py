@@ -426,3 +426,27 @@ def achievements_page(request):
     }
 
     return render(request, 'polls/achievements.html', context)
+def user_search(request):
+    query = request.GET.get('q', '')  # Получаем поисковый запрос
+    users = User.objects.all()
+
+    if query:
+        users = users.filter(username__icontains=query)  # Ищем пользователей по имени, игнорируя регистр
+
+    return render(request, 'polls/user_search_results.html', {'users': users, 'query': query})
+@login_required
+def user_profile(request, user_id):
+    profile_user = get_object_or_404(User, id=user_id)
+
+    # Получаем достижения через промежуточную модель
+    user_achievements = UserAchievement.objects.filter(user=profile_user).select_related('achievement')
+
+    # Голосования, созданные этим пользователем
+    elections_created = Election.objects.filter(creator=profile_user)
+
+    context = {
+        'profile_user': profile_user,
+        'achievements': [ua.achievement for ua in user_achievements],
+        'elections_created': elections_created,
+    }
+    return render(request, 'polls/user_profile.html', context)

@@ -1,0 +1,61 @@
+{% extends 'polls/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">Профиль пользователя: {{ profile_user.username }}</h3>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Достижения -->
+        <div class="col-md-6">
+          <h5 class="mb-3">🎖 Достижения</h5>
+          {% if achievements %}
+          <ul class="list-group">
+            {% for achievement in achievements %}
+            <li class="list-group-item">
+              <strong>{{ achievement.name }}</strong><br>
+              <small class="text-muted">{{ achievement.description }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted">Нет достижений.</p>
+          {% endif %}
+        </div>
+
+        <!-- Голосования -->
+        <div class="col-md-6">
+          <h5 class="mb-3">🗳 Созданные голосования</h5>
+          {% if elections_created %}
+          <ul class="list-group">
+            {% for election in elections_created %}
+            <li class="list-group-item">
+              <strong>{{ election.title }}</strong><br>
+              <small>{{ election.start_date|date:"d.m.Y H:i" }} – {{ election.end_date|date:"d.m.Y H:i" }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted">Нет созданных голосований.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Голоса пользователя (если нужно) -->
+      {% if votes %}
+      <hr>
+      <h5 class="mb-3">🗳 Голоса</h5>
+      <ul class="list-group">
+        {% for vote in votes %}
+        <li class="list-group-item">
+          Вы проголосовали за <strong>{{ vote.candidate.name }}</strong> в голосовании <em>{{ vote.candidate.election.title }}</em>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

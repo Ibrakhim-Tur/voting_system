@@ -30,18 +30,6 @@
                     Подтвердить выбор
                 </button>
             </form>
-             <form method="post">
-                 {% csrf_token %}
-                 <div class="form-group">
-                     <label for="candidate">Выберите кандидата:</label>
-                     <select name="candidate" id="candidate" class="form-control">
-                         {% for candidate in election.candidates.all %}
-                         <option value="{{ candidate.id }}">{{ candidate.name }}</option>
-                         {% endfor %}
-                     </select>
-                 </div>
-                 <button type="submit" class="btn btn-primary mt-3">Проголосовать</button>
-             </form>
 
         </div>
     </div>

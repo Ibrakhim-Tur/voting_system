@@ -2,93 +2,115 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-4 mb-4 text-center">Активные голосования</h1>
+  <h1 class="display-4 mb-4 text-center">Активные голосования</h1>
 
-    {% if page_obj %}
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+  <div class="row">
+    <!-- Левая колонка: голосования -->
+    <div class="col-lg-9">
+      {% if page_obj %}
+      <div class="row row-cols-1 row-cols-md-2 g-4">
         {% for election in page_obj %}
         <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <span>{{ election.title }}</span>
-                    {% if election.is_public %}
-                    <span class="badge bg-success">Публичное</span>
-                    {% else %}
-                    <span class="badge bg-warning text-dark">Приватное</span>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <p class="card-text">{{ election.description|default:"Без описания." }}</p>
-                    <ul class="list-unstyled">
-                        <li><strong>Начало:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
-                        <li><strong>Окончание:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
-                        <li>
-                            <strong>Осталось:</strong>
-                            <span id="timer-{{ election.id }}" data-end="{{ election.end_date|date:'Y-m-d\\TH:i:s' }}"></span>
-                        </li>
-                        <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
-                    </ul>
-                </div>
-
-                <div class="card-footer bg-light d-flex justify-content-between flex-wrap gap-2">
-                    {% if election.is_currently_active %}
-                    <a href="{% url 'vote' election.id %}" class="btn btn-outline-primary btn-sm w-100">
-                        <i class="bi bi-check-circle"></i> Проголосовать
-                    </a>
-                    {% else %}
-                    <span class="btn btn-secondary disabled">
-                        <i class="bi bi-clock-history"></i> Голосование завершено
-                    </span>
-                    {% endif %}
-                    <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary btn-sm w-100">
-                        <i class="bi bi-bar-chart"></i> Результаты
-                    </a>
-                    {% if user.is_superuser or election.creator == user %}
-                    <a href="{% url 'manage_election' election.id %}" class="btn btn-outline-dark btn-sm w-100">
-                        <i class="bi bi-gear"></i> Управление
-                    </a>
-                    {% endif %}
-                    <div class="text-center mt-3">
-                        <img src="{{ election.qr_code }}" alt="QR Code" class="img-thumbnail" style="width: 150px; margin-left: 20px;">
-                        <p class="small text-muted mt-1">Сканируйте для голосования</p>
-                    </div>
-                </div>
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+              <span>{{ election.title }}</span>
+              {% if election.is_public %}
+              <span class="badge bg-success">Публичное</span>
+              {% else %}
+              <span class="badge bg-warning text-dark">Приватное</span>
+              {% endif %}
             </div>
+            <div class="card-body">
+              <p class="card-text">{{ election.description|default:"Без описания." }}</p>
+              <ul class="list-unstyled">
+                <li><strong>Начало:</strong> {{ election.start_date|date:"d.m.Y H:i" }}</li>
+                <li><strong>Окончание:</strong> {{ election.end_date|date:"d.m.Y H:i" }}</li>
+                <li>
+                  <strong>Осталось:</strong>
+                  <span id="timer-{{ election.id }}" data-end="{{ election.end_date|date:'Y-m-d\\TH:i:s' }}"></span>
+                </li>
+                <li><strong>Кандидатов:</strong> {{ election.candidates.count }}</li>
+              </ul>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between flex-wrap gap-2">
+              {% if election.is_currently_active %}
+              <a href="{% url 'vote' election.id %}" class="btn btn-outline-primary btn-sm w-100">
+                <i class="bi bi-check-circle"></i> Проголосовать
+              </a>
+              {% else %}
+              <span class="btn btn-secondary disabled">
+                <i class="bi bi-clock-history"></i> Голосование завершено
+              </span>
+              {% endif %}
+              <a href="{% url 'results' election.id %}" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-bar-chart"></i> Результаты
+              </a>
+              {% if user.is_superuser or election.creator == user %}
+              <a href="{% url 'manage_election' election.id %}" class="btn btn-outline-dark btn-sm w-100">
+                <i class="bi bi-gear"></i> Управление
+              </a>
+              {% endif %}
+              <div class="text-center mt-3">
+                <img src="{{ election.qr_code }}" alt="QR Code" class="img-thumbnail" style="width: 150px; margin-left: 20px;">
+                <p class="small text-muted mt-1">Сканируйте для голосования</p>
+              </div>
+            </div>
+          </div>
         </div>
         {% endfor %}
+      </div>
+
+      <!-- Пагинация -->
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; Первая</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+          </li>
+          {% endif %}
+
+          <li class="page-item active">
+            <span class="page-link">
+              Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+          </li>
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% else %}
+      <div class="alert alert-info text-center">У вас нет активных голосований.</div>
+      {% endif %}
     </div>
 
-    <!-- Пагинация -->
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1">&laquo; Первая</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
-                </li>
-            {% endif %}
-
-            <li class="page-item active">
-                <span class="page-link">
-                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-                </span>
-            </li>
-
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
-                </li>
-            {% endif %}
+    <!-- Правая колонка: Топ пользователей -->
+    <div class="col-lg-3">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+          <strong><i class="bi bi-trophy-fill"></i> Топ 10 активных пользователей</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for user in top_users %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ user.username }}
+            <span class="badge bg-primary rounded-pill">{{ user.vote_count }}</span>
+          </li>
+          {% empty %}
+          <li class="list-group-item">Нет данных.</li>
+          {% endfor %}
         </ul>
-    </nav>
-
-    {% else %}
-    <div class="alert alert-info text-center">У вас нет активных голосований.</div>
-    {% endif %}
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

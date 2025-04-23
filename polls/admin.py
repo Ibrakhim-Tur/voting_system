@@ -1,6 +1,14 @@
 from django.contrib import admin
-from .models import Election, Candidate, Vote
+from .models import Election, Candidate, Vote,Achievement
 from import_export.admin import ImportExportModelAdmin
+
+
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display = ('name', 'required_votes')
+    search_fields = ('name',)
+    list_filter = ('required_votes',)
 
 @admin.register(Election)
 class ElectionAdmin(admin.ModelAdmin):

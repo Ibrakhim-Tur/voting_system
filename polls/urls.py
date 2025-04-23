@@ -6,6 +6,8 @@ urlpatterns = [
     # Главная страница — список публичных голосований
     path('', views.home, name='home'),
 
+
+    path('achievements/', views.achievements_page, name='achievements'),
     # Страница управления голосованием
     path('manage/<int:election_id>/', views.manage_election, name='manage_election'),
     path('manage/<int:election_id>/delete/', views.delete_election, name='delete_election'),
@@ -29,4 +31,8 @@ urlpatterns = [
 
     # Страница с приватными голосованиями
     path('my-private/', views.my_private_elections, name='my_private_elections'),
+
+
+    path('profile/', views.profile, name='profile'),
+
 ]

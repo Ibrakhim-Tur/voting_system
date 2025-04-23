@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.validators import MinLengthValidator, FileExtensionValidator
 
 
+
 import uuid
 from django.utils.text import slugify
 
@@ -122,6 +123,7 @@ class Vote(models.Model):
             )
         ]
 
+
     def __str__(self):
         return f"{self.user.username} → {self.candidate.name} ({self.election.title})"
 
@@ -149,6 +151,8 @@ class ElectionOption(models.Model):
         verbose_name='Фото'
     )
 
+
+
     class Meta:
         verbose_name = 'Вариант выборов'
         verbose_name_plural = 'Варианты выборов'
@@ -163,3 +167,38 @@ creator = models.ForeignKey(
     null=True,  # временно разрешаем null
     blank=True
 )
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    required_votes = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)  # автоматическая установка при создании
+    total_votes_required = models.PositiveIntegerField(help_text="Количество голосований, которые необходимо пройти для достижения")
+    goal = models.PositiveIntegerField(default=0, help_text="Цель для достижения")  # Новый атрибут
+    icon = models.ImageField(upload_to='achievement_icons/', blank=True, null=True)  # Добавление поля icon
+
+    def __str__(self):
+        return self.name
+
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    votes_completed = models.PositiveIntegerField(default=0)  # Количество голосований, которые пользователь уже прошел
+    achieved = models.BooleanField(default=False)
+
+    @property
+    def remaining_votes(self):
+        """Вычисляем, сколько голосований осталось до выполнения достижения."""
+        if not self.achieved:
+            remaining = self.achievement.total_votes_required - self.votes_completed
+            return remaining if remaining > 0 else 0  # Возвращаем 0, если голосований не осталось
+        return 0
+
+    @property
+    def progress_percentage(self):
+        """Вычисляем прогресс в процентах."""
+        if self.achievement.total_votes_required > 0:
+            progress = (self.votes_completed / self.achievement.total_votes_required) * 100
+            return min(progress, 100)  # Ограничиваем прогресс 100%
+        return 0
